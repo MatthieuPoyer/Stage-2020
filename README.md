@@ -4,4 +4,4 @@
 Une mise à jour avec des codes plus propres est prévue pour très prochainement :)
 
 * Création d'Adversaire
-  >>Lebutr
+  >Lebutr

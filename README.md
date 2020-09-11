@@ -10,3 +10,6 @@ D'ailleurs, tous les codes sont indépendants (donc certaines fonctions apparais
 * Création d'Adversaire
   >C'est le premier code. Il crée le réseau de neurones, ainsi que des adveraires avec deux stratégies différentes : celle proposée par Szegedy et une banale descente en gradient. On y évalue l'impact du nombre d'étapes d'entraînement, ainsi que celui des couches internes.
 * Étude de la régularisation et du dropout
+
+* Impact du bruit en entrée d'un générateur
+  >Le but de cette partie est de répondre à la question : si on met une image et du bruit en entrée d'un réseau de neurones et qu'on lui demande de générer des adveraires, va-t-il vraiment ignorerle bruit ? 

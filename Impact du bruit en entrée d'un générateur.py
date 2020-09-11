@@ -3,7 +3,7 @@
 #             et étude de l'impact du bruit en entrée                          #
 # ##############################################################################
 
-# Le but de cette partie est de vérifier une intuition :
+# Le but de cette partie est de répondre à la question  :
 # si on met une image et du bruit en entrée d'un réseau de neurones
 # et qu'on lui demande de générer des adveraires, va-t-il vraiment ignorer
 # le bruit ?

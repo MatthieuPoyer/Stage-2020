@@ -69,8 +69,6 @@ test_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
 
 # Entraînement du réseau de neurones
 
-# !!!! ATTENTION REVOIR MES CODES ICI !!!
-
 # ici "@tf.function" perm d'exécute + rapidement les instructions
 @tf.function
 def train_step(images, labels, model):

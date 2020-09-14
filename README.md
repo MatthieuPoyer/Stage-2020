@@ -16,3 +16,5 @@ D'ailleurs, tous les codes sont indépendants (donc certaines fonctions apparais
   
 * Algorithme de Madry accéléré
   >Nous avons proposé une version accélérée de la méthode de Madry. L'astuce consiste à générer des adveraires avec un réseau de neurones, afin de gagner du temps sur cette étape qui est longue.
+
+PS : Les codes utilisent tensorflow 2

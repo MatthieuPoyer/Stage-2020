@@ -3,7 +3,7 @@
 #             et étude de l'impact du bruit en entrée                          #
 # ##############################################################################
 
-# Le but de cette partie est de répondre à la question  :
+# Le but de cette partie est de vérifier une intuition :
 # si on met une image et du bruit en entrée d'un réseau de neurones
 # et qu'on lui demande de générer des adveraires, va-t-il vraiment ignorer
 # le bruit ?
@@ -48,13 +48,12 @@ train_ds=tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(batch_size
 # II - Construction du classifieur
 # ################################
 
-def FC100_100_10(lambda0 = (10**(-5), 10**(-5), 10**(-6)), couches = (100,100)):
+def FC100_100_10(couches = (100,100)):
     Nh1, Nh2 = couches
-    lambda1, lambda2, lambda3 = lambda0
     model = models.Sequential([
-        layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,), kernel_regularizer=tf.keras.regularizers.l2(lambda1/100)),
-        layers.Dense(units=Nh2, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(lambda2/100)),
-        layers.Dense(units=10, activation='softmax', kernel_regularizer=tf.keras.regularizers.l2(lambda3/10))
+        layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,),
+        layers.Dense(units=Nh2, activation='sigmoid',
+        layers.Dense(units=10, activation='softmax')
     ])
     
     print("Structure du modele")

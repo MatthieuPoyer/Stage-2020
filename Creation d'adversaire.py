@@ -78,8 +78,8 @@ def train_step(images, labels, model):
     loss=loss_object(labels, predictions)
   gradients = tape.gradient(loss, model.trainable_variables)
   optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-  train_loss(loss) # + bas dans "def train" on comprend l'intérêt de cette instruction (édition des résultats
-  train_accuracy(labels, predictions) # idem
+  train_loss(loss)
+  train_accuracy(labels, predictions)
 
 def train(train_ds, nbr_entrainement, model):
   for entrainement in range(nbr_entrainement):

@@ -1,5 +1,5 @@
 # ##############################################################################
-#       Programme de génération d'adveraire avec la méthode de Szegedy         #
+#       Programme de génération d'adversaire avec la méthode de Szegedy        #
 #             et une descente en gradient classique                            #
 # ##############################################################################
 

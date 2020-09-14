@@ -51,8 +51,8 @@ train_ds=tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(batch_size
 def FC100_100_10(couches = (100,100)):
     Nh1, Nh2 = couches
     model = models.Sequential([
-        layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,),
-        layers.Dense(units=Nh2, activation='sigmoid',
+        layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,)),
+        layers.Dense(units=Nh2, activation='sigmoid'),
         layers.Dense(units=10, activation='softmax')
     ])
     

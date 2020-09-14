@@ -44,13 +44,12 @@ train_ds=tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(batch_size
 
 # Construction  d'un réseau à 2 couches cachées de 100 neurones chacune, dont le but est de classifier la base de données MNIST
 
-def FC100_100_10(lambda0 = (10**(-5), 10**(-5), 10**(-6)), couches = (100,100)):
+def FC100_100_10(couches = (100,100)):
     Nh1, Nh2 = couches
-    lambda1, lambda2, lambda3 = lambda0
     model = models.Sequential([
-        layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,), kernel_regularizer=tf.keras.regularizers.l2(lambda1/100)),
-        layers.Dense(units=Nh2, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(lambda2/100)),
-        layers.Dense(units=10, activation='softmax', kernel_regularizer=tf.keras.regularizers.l2(lambda3/10))
+        layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,)),
+        layers.Dense(units=Nh2, activation='sigmoid'),
+        layers.Dense(units=10, activation='softmax')
     ])
     
     print("Structure du modele")
@@ -68,6 +67,8 @@ test_loss=tf.keras.metrics.Mean()
 test_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
 
 # Entraînement du réseau de neurones
+
+# !!!! ATTENTION REVOIR MES CODES ICI !!!
 
 # ici "@tf.function" perm d'exécute + rapidement les instructions
 @tf.function

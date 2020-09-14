@@ -56,15 +56,12 @@ def FC100_100_10(couches = (100,100)):
     return(model)
 
 
-# On fait appel aux fonctions "keras"
 optimizer=tf.keras.optimizers.Adam()
 loss_object=tf.keras.losses.SparseCategoricalCrossentropy()
 train_loss=tf.keras.metrics.Mean()
 train_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
 test_loss=tf.keras.metrics.Mean()
 test_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
-
-# Entraînement du réseau de neurones
 
 # ici "@tf.function" perm d'exécute + rapidement les instructions
 @tf.function

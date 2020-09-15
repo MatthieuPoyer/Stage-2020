@@ -1,7 +1,6 @@
 # Robustesse des Réseaux de neurones par apprentissage antagoniste
 
->Vous trouverez dans ce répertoire les codes en vrac que j'ai utilisé durant mon stage.
-Une mise à jour avec des codes plus propres est prévue pour très prochainement :).
+>Vous trouverez dans ce répertoire les codes que j'ai utilisé durant mon stage.
 D'ailleurs, tous les codes sont indépendants (donc certaines fonctions apparaissent plusieurs fois)
 
 >Je vous invite à lire le rapport de stage, qui présente la démarche et les idées développés dans certains codes.

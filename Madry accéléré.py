@@ -56,12 +56,15 @@ def FC100_100_10(couches = (100,100)):
     return(model)
 
 
+# On fait appel aux fonctions "keras"
 optimizer=tf.keras.optimizers.Adam()
 loss_object=tf.keras.losses.SparseCategoricalCrossentropy()
 train_loss=tf.keras.metrics.Mean()
 train_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
 test_loss=tf.keras.metrics.Mean()
 test_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
+
+# Entraînement du réseau de neurones
 
 # ici "@tf.function" perm d'exécute + rapidement les instructions
 @tf.function
@@ -172,7 +175,7 @@ nbr_entrainement_gene= 50
 discriminator = FC100_100_10(couches = (100,100))
 generator = FC500_500_10_ReLU()
 
-nbre_etapes_gene_disc = 2
+nbre_etapes_gene_disc = 20
 
 liste_dist_test = []
 liste_dist = []
@@ -217,6 +220,25 @@ for i in range(nbre_etapes_gene_disc):
   distorsionPart = np.mean(np.sqrt(np.mean(np.square(x_test - soltest), axis = 1)))
   liste_dist_test.append(distorsionPart)
   
+  
+# 4 - Sauvegarde des poids
+
+# discriminator.save_weights("discriminator20.txt", save_format = 'tf')
+# generator.save_weights("generator20.txt", save_format = 'tf')
+
+
+# 5 - Sauvegarde des adversaires
+
+# with open("adversaire_train_20.txt", 'w') as output:
+#     for row in x_t:
+#       part_line = str((row * 255).astype(int)).replace('\n','')
+#       output.write("%s\n" % part_line)
+
+# with open("adversaire_test_20.txt", 'w') as output:
+#     for row in bdd_test:
+#       part_line = str((row * 255).astype(int)).replace('\n','')
+#       output.write("%s\n" % part_line)
+
 #################
 # V - Résultats # 
 #################
@@ -360,6 +382,10 @@ import matplotlib.pyplot as plt
 
 # La distorsion moyenne après 20 étapes
 # a = np.array([0.073579594, 0.077717565, 0.08322092, 0.07832371, 0.087938294, 0.087290645, 0.098814584, 0.08776691, 0.100518204, 0.097730175, 0.09347145, 0.10769891, 0.11493808, 0.09993061, 0.11145804, 0.10446661, 0.10817391, 0.106853835, 0.1163971, 0.11360584])
+
+# a = array([0.06878666, 0.07600361, 0.07714871, 0.08300941, 0.08817143, 0.09691197, 0.0994311 , 0.09836165, 0.10565031, 0.09478215, 0.11010677, 0.09952427, 0.11496932, 0.10453548, 0.10942534, 0.10138268, 0.11042923, 0.12061973, 0.1116171 , 0.11156804], dtype=float32)
+# b = array([0.06774476, 0.07534872, 0.07630747, 0.08218347, 0.08720054, 0.09573916, 0.09824296, 0.09764852, 0.10477947, 0.09429418, 0.10972085, 0.09906384, 0.11438948, 0.10414223, 0.10933181, 0.10082763, 0.10981742, 0.11992332, 0.11139984, 0.11104199], dtype=float32)
+# c = array([97.619995, 97.455   , 97.479996, 97.4925  , 97.46    , 97.46667 , 97.49572 , 97.5     , 97.513336, 97.53    , 97.53727 , 97.51417 , 97.52384 , 97.51786 , 97.504005, 97.48625 , 97.477646, 97.452225, 97.40158 , 97.3845  ], dtype=float32)
 
 a = np.array(liste_dist_test)
 b = np.array(liste_dist)

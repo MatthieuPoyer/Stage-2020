@@ -39,20 +39,20 @@ train_ds=tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(batch_size
 
 
 
-# II - Construction du classifieur
+# II - Construction du Classifieur
 # ################################
 
 # Construction  d'un réseau à 2 couches cachées de 100 neurones chacune, dont le but est de classifier la base de données MNIST
 
-def FC100_100_10(lambda0 = (10**(-5), 10**(-5), 10**(-6)), couches = (100,100)):
+def FC100_100_10(lambda0 = (10**(-5), 10**(-5), 10**(-6)), couches = (100,100), dropout = 0):
     Nh1, Nh2 = couches
     lambda1, lambda2, lambda3 = lambda0
     model = models.Sequential([
         layers.Dense(units=Nh1, activation='sigmoid',input_shape=(784,),
         kernel_regularizer=tf.keras.regularizers.l2(lambda1/100)),
-        #layers.Dropout(0.9),
+        layers.Dropout(dropout),
         layers.Dense(units=Nh2, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(lambda2/100)),
-        #layers.Dropout(0.9),
+        layers.Dropout(dropout),
         layers.Dense(units=10, activation='softmax', kernel_regularizer=tf.keras.regularizers.l2(lambda3/10))
     ])
     
@@ -62,12 +62,17 @@ def FC100_100_10(lambda0 = (10**(-5), 10**(-5), 10**(-6)), couches = (100,100)):
     return(model)
 
 
+# On fait appel aux fonctions "keras"
 optimizer=tf.keras.optimizers.Adam()
 loss_object=tf.keras.losses.SparseCategoricalCrossentropy()
 train_loss=tf.keras.metrics.Mean()
 train_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
 test_loss=tf.keras.metrics.Mean()
 test_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
+
+# Entraînement du réseau de neurones
+
+# !!!! ATTENTION REVOIR MES CODES ICI !!!
 
 # ici "@tf.function" perm d'exécute + rapidement les instructions
 @tf.function
@@ -77,8 +82,8 @@ def train_step(images, labels, model):
     loss=loss_object(labels, predictions)
   gradients = tape.gradient(loss, model.trainable_variables)
   optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-  train_loss(loss) # + bas dans "def train" on comprend l'intérêt de cette instruction (édition des résultats
-  train_accuracy(labels, predictions) # idem
+  train_loss(loss)
+  train_accuracy(labels, predictions)
 
 def train(train_ds, nbr_entrainement, model):
   for entrainement in range(nbr_entrainement):
@@ -92,6 +97,8 @@ def train(train_ds, nbr_entrainement, model):
                          time.time()-start))
     train_loss.reset_states()
     train_accuracy.reset_states()
+    
+# fonction qui sert à évaluer le réseaux de neurones sur la base de test
 
 def test(xt,yt,model):
   start=time.time()
@@ -105,8 +112,13 @@ def test(xt,yt,model):
                        time.time()-start))
 
 
+# III - Les fonctions de création d'adversaire
+# ############################################
 
-def gradientX2(model, image, chiffre_cible):
+# 1 . Création d'adversaire à l'aide d'une descente en gradient classique
+    
+    
+def gradient(model, image, chiffre_cible):
   with tf.GradientTape() as tape:
     tape.watch(image)
     predictions=model(image)
@@ -117,17 +129,14 @@ def gradientX2(model, image, chiffre_cible):
   # gradients.shape = (1,784)
   return gradients
     
-def creation_Adversaire2(m, model):
+def creation_Adversaire(m, model):
     # Sélection de l'image à perturber
     image_original = x_test[m]
     imReelle = image_original.reshape(1,784)
 
     imAdversaire = tf.constant(imReelle) # on doit faire un "cast" en tenseur de la structure np.array de imReelle
                                          # pour utiliser les fonctionnalités de TensorFlow (modele + gradient)
-    # Delta = imReelle - imAdversaire
-    # EQM =  np.mean(Delta*Delta)
-    # print(EQM)
-    
+
     n=0
     alpha = 0.01
     chiffre_reconnu = np.argmax(model(imAdversaire))
@@ -135,7 +144,7 @@ def creation_Adversaire2(m, model):
     # Le + simle des algo : "iterative gradient" (on se limite à 100 itérations)
     while n < 1000 and chiffre_reconnu == chiffre_original:
         n=n+1
-        delta = alpha * gradientX2(model, imAdversaire,chiffre_original)
+        delta = alpha * gradient(model, imAdversaire,chiffre_original)
         imAdversaire = tf.clip_by_value(imAdversaire + delta, clip_value_min=0, clip_value_max=1)
         chiffre_reconnu = np.argmax(model(imAdversaire))
         
@@ -144,40 +153,14 @@ def creation_Adversaire2(m, model):
     EQM =  np.mean(Delta*Delta)
     
     if n == 1000:
-         #print("ca marche pas :( ")
          EQM = -1
-    
-    # # On edite le carré de la norme de Frobenius de la perturbation (moyenné par le nombre de pixels)
-    # print("EQM = ",np.mean(Delta * Delta)) # pour ce cas EQM = 0.0015074897
-    
-    #print(EQM)
+         
     return(imAdversaire, imReelle, EQM)
     
 
+# 2 . Création d'adverrsaire à l'aide de la méthode proposée par Szegedy (ie utiliser LBFGS-B)
 
-    
-def gradientX42(model, image, n):
-    chiffre_original = y_test[n]
-    with tf.GradientTape() as tape:
-        tape.watch(image)
-        predictions=model(image)
-        loss_val = loss_object(chiffre_original, 1-predictions)
-        output_adversial = loss_val
-    gradients = tape.gradient(output_adversial, image)
-    return gradients
-    
-def gradientX52(mode, image, n):
-    chiffre_original = y_test[n]
-    with tf.GradientTape() as tape:
-        tape.watch(image)
-        predictions=model(image)
-        output_adversial = predictions[chiffre_original]
-    gradients = tape.gradient(output_adversial, image)
-    # print(type(gradients), type(predictions))
-    # gradients = -gradients/(predictions)
-    return gradients
-    
-def func(x, model, c, n):
+def func_Szegedy(x, model, c, n):
     ad = x.reshape(1,784)
     imAdversaire = tf.constant(ad)
     predictions=model(imAdversaire)
@@ -188,9 +171,20 @@ def func(x, model, c, n):
     y = np.linalg.norm(ad-x_test[n])*c + loss_val
     
     #on calcule son gradient
-    gra = gradientX42(model, imAdversaire, n)
+    gra = gradient_Szegedy(model, imAdversaire, n)
     gra = (gra.numpy()+c*(2*ad[0]-2*x_test[n])).flatten()
     return y, gra
+
+def gradient_Szegedy(model, image, n):
+    chiffre_original = y_test[n]
+    with tf.GradientTape() as tape:
+        tape.watch(image)
+        predictions=model(image)
+        loss_val = loss_object(chiffre_original, 1-predictions)
+        output_adversial = loss_val
+    gradients = tape.gradient(output_adversial, image)
+    return gradients
+
 
 def IntriguingAdversersarialSansButPrecis(n, model1):
     """ on va chercher à créer un adversaire, pour le moment on ne renvoie rien !!!
@@ -209,7 +203,7 @@ def IntriguingAdversersarialSansButPrecis(n, model1):
 
 
     #il s'agit désormais de trouver un bon c
-    c = 10
+    c = 2
     bounds = [(0,1)]*784
     
     predict = model1.predict(np.array([x_test[n]]))
@@ -217,31 +211,26 @@ def IntriguingAdversersarialSansButPrecis(n, model1):
     asample = pic.reshape((1,28,28))
     ploc = pic.reshape((1,28,28))
 
-    ad = so.minimize(func, x_test[n], method = 'L-BFGS-B', jac = True,args=(model1, 0, n), bounds = bounds)
+    ad = so.minimize(func_Szegedy, x_test[n], method = 'L-BFGS-B', jac = True,args=(model1, 0, n), bounds = bounds)
     
     asample = ad.x.reshape((1,28,28))
     ploc = x_test[n].reshape((1,28,28))
     predict1 = model1.predict(np.array([ad.x]))
     
-    
     possible = (np.argmax(predict1) != l)
     
-    if ad.success == False:
-        print(n, "raté")
     
     if not(np.argmax(predict) == l):
-        #print("coucou")
-        return(42,0)
+        return(0)
     
     elif not(possible):
-        return(42,-1)
-    
+        return(-1)
     
     while np.argmax(predict) == l:
         #on s'arrête dès que l'on atteint un label différent du bon
 
         #on minimise la fonction
-        ad = so.minimize(func, x_test[n], method = 'L-BFGS-B', jac = True,args=(model1, c, n), bounds = bounds)
+        ad = so.minimize(func_Szegedy, x_test[n], method = 'L-BFGS-B', jac = True,args=(model1, c, n), bounds = bounds)
         
         asample = ad.x.reshape((1,28,28))
         ploc = x_test[n].reshape((1,28,28))
@@ -249,61 +238,42 @@ def IntriguingAdversersarialSansButPrecis(n, model1):
         c = c/1.5
     
     Delta = asample-ploc
-    # print("c = ", c)
-    #print(n, "EQM = ",np.mean(Delta * Delta))
-    # print("prediction image : ", np.argmax(predict))
-    # securite = model1.predict(asample.reshape(1,784))
-    # print("prediction : ", predict)
-    # print("securite : ", securite)
-    # pic = asample[0]*255
-    # plt.imshow(pic, cmap="gray")
-    # plt.show()
-    return(asample, np.mean(Delta * Delta))   
+    return(np.mean(Delta * Delta))   
     
-# ###################
 
+# IV - Évaluation de la distorsion des adversaires
+# ################################################
+
+# création, entraînement et évaluation du modèle
 nbr_entrainement= 10
 lambda0 = (0,0,0)
-#lambda0 = (10**(2), 10**(2), 10**(1))
-model = FC100_100_10(lambda0 = lambda0, couches = (100,100))
+dropout = 0
+#lambda0 = (10**(-5), 10**(-5), 10**(-6))
+model = FC100_100_10(lambda0 = lambda0, couches = (100,100), dropout = dropout)
 model.compile(optimizer = optimizer, loss = loss_object, metrics=['accuracy'])
 model.summary()
-
 model.fit(x_train, y_train,
           batch_size=64,
           epochs=nbr_entrainement,
 )
-
-# On fait appls aux fonctions "keras" très pratique
-optimizer=tf.keras.optimizers.Adam()
-loss_object=tf.keras.losses.SparseCategoricalCrossentropy()
-train_loss=tf.keras.metrics.Mean()
-train_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
-test_loss=tf.keras.metrics.Mean()
-test_accuracy=tf.keras.metrics.SparseCategoricalAccuracy()
-
-# model.fit
-# print("Entrainement")
-print(lambda0, nbr_entrainement, "dropout :", 0.9)
-# train(train_ds, nbr_entrainement, model)
-
-##
+print(lambda0, nbr_entrainement, "dropout :", dropout)
 print("Jeu de test")
 test(x_test,y_test, model)
     
+# On sélectionne 1000 images de la BDD test aléatoirement pour lesquels on cherche leur adversaire pour le modèle
+# Si on le fait sur 1000 images et pas les 10 000 de la BDD, c'est pour aller 10 fois plus vite tout en ayant des 
+# résultats statistiquement fiables
 minimisons = [x for x in range(len(y_test))]
 shuffle(minimisons)
 liste1 = []
 liste2 = []
-cbn = 0
 for i in minimisons[:1000]:
-    cbn += 1
-    print(cbn)
-    retour_adversaire1 = creation_Adversaire2(i, model)
+    retour_adversaire1 = creation_Adversaire(i, model)
     retour_adversaire2 = IntriguingAdversersarialSansButPrecis(i, model)
     liste1.append(retour_adversaire1[-1])
-    liste2.append(retour_adversaire2[-1])
+    liste2.append(retour_adversaire2)
 
+# Une fois que l'on a nos adversaires on calcule différente valeur, dont la distorsion
 liste1 = [i for i in liste1 if i != 0]
 a1 = len(liste1)
 print("Il y a : ", 1000-a1, " prédictions fausses au départ, donc inutile de leur chercher un adversaire")
@@ -329,70 +299,10 @@ distortion_moyenne2 = sum([np.sqrt(i) for i in liste2])/len(liste2)
 print("La distortion moyenne dans le cas de l'iterative gradient est : ", distortion_moyenne1)
 print("La distortion moyenne dans le cas de Intriguing properties est : ", distortion_moyenne2)
 
-##
 
-import matplotlib.pyplot as plt
-
-plt.close()
-#n = np.random.randint(0,10000,1)[0] # on va perturber la 1000 ième image de la base de test qui correspond au chiffre 9
-n = 1000
-X = x_test
-Y = to_categorical(y_test)
-# Sélection de l'image à perturber
-label_oiginal  = Y[n]  # un "9"
-image_original = X[n]
-
-'''
-Calcul du gradient du log de la vraisemblance du chiffre cible (proposé par l'adversaire)
-par rapport aux entrées (image) >  vecteur de 784 composantes
-'''
-  
-
-imReelle = image_original.reshape(1,784)
-# plt.figure(figsize=(2, 2))
-# plt.imshow(imReelle.reshape([28, 28]),cmap = "gray")
-# plt.show()
-
-# On modifie l'image du "9" de telle sorte que le réseau la confonde avec celle d'un 0 (crapy crapy shity code n'est ce pas ?)
-# imAdversaire = tf.constant(imReelle) # on doit faire un "cast" en tenseur de la structure np.array de imReelle
-#                                      # pour utiliser les fonctionnalités de TensorFlow (modele + gradient)
-# n=0
-# alpha = 0.01
-
-# Le + simle des algo : "iterative gradient" (on se limite à 100 itérations)
-
-imAdversaire2 = IntriguingAdversersarialSansButPrecis(n, model)[0][0]
-imAdversaire =  creation_Adversaire2(n, model)[0][0]
-
-
-imAdversaire = np.array([imAdversaire]) # On transforme le tf de TensorFlow en np.array de NumPy
-Delta = imReelle - imAdversaire
-imAdversaire2 = np.array(imAdversaire2).reshape(1,784) # On transforme le tf de TensorFlow en np.array de NumPy
-Delta2 = imReelle - imAdversaire2
-
-
-plt.figure(figsize=(9, 3))
-
-plt.subplot(1,3,1)
-plt.imshow(imReelle.reshape([28, 28]),cmap = "gray")
-plt.title("Chiffre = " + np.str(np.argmax(model(imReelle))))
-plt.xlabel("confidence = " + np.str(np.max(model(imReelle)))[:5])
-# Perturbation adverse
-plt.subplot(1,3,2)
-plt.imshow(Delta2.reshape([28, 28]),cmap = "gray")
-plt.title("Perturbation adversaire")
-# Image modifiée par l'adversaire
-plt.subplot(1,3,3)
-plt.imshow(imAdversaire2.reshape([28, 28]),cmap = "gray")
-plt.title("Chiffre = " + np.str(np.argmax(model(imAdversaire2))))
-plt.xlabel("confidence = " + np.str(np.max(model(imAdversaire2)))[:5])
-
-plt.show()
-
-# On edite le carré de la norme de Frobenius de la perturbation (moyenné par le nombre de pixels)
-print("EQM = ",np.mean(Delta * Delta)) # pour ce cas EQM = 0.0015074897
-print("EQM2= ", np.mean(Delta2 * Delta2))
-
+#######################
+# Résultats des tests #
+#######################
 
 ################# RÉSULTATS 20 EPOCHS RÉGULARISATION :
 
